@@ -1,0 +1,271 @@
+# -*- coding: utf-8 -*-
+# code by Avigdor (https://github.com/cubicle-vdo/xbmc-israel)
+import urllib, sys, xbmcplugin, xbmcvfs, xbmcgui, xbmcaddon, xbmc, os, json, glob, requests, re, \
+    xml.etree.cElementTree as ET, os
+
+AddonID = 'plugin.video.nfogen'
+Addon = xbmcaddon.Addon(AddonID)
+AddonName = Addon.getAddonInfo("name")
+icon = Addon.getAddonInfo('icon')
+
+addonDir = Addon.getAddonInfo('path').decode("utf-8")
+
+# libDir = os.path.join(addonDir, 'resources', 'lib')
+# sys.path.insert(0, libDir)
+#
+# addon_data_dir = os.path.join(xbmc.translatePath("special://userdata/addon_data").decode("utf-8"), AddonID)
+# if not os.path.exists(addon_data_dir):
+#     os.makedirs(addon_data_dir)
+
+
+def intro():
+    dialog = xbmcgui.Dialog()
+    ok = dialog.ok('How to be sure kodi will find tvshow',
+                   'Store your season folder in the tvshows (scanned) root folder' + ' ok : /folder/tvshow/dinotrux Season 1',
+                   'not ok : /folder/tvshow/dinotrux/dinotrux Season 1',
+                   'Be sure files are well named (ex dinotrainE02) the episode number should be visible'
+                   )
+
+
+def getLocaleString(id):
+    return Addon.getLocalizedString(id).encode('utf-8')
+
+
+def Categories():
+    AddDir("[COLOR yellow][B]{0}[/B][/COLOR]".format(getLocaleString(10001)), "settings", 20,
+           os.path.join(addonDir, "resources", "images", "NewList.ico"), isFolder=False)
+
+
+def SelectFolder():
+    folder = xbmcgui.Dialog().browse(3, "select source folder", "videos", ".mkv|.mp4|.m4v|.avi|.ts|.part").decode("utf-8")
+    mode = 21
+    return folder
+
+def getShowName(folder):
+	folders = folder.split("/")
+	folder = folders[len(folders) - 2]
+	return GetKeyboardText(getLocaleString(10002), folder)
+
+
+def ListFilesInFolder():
+    acceptableExtensions = [".mkv", '.mp4', '.m4v', '.avi', '.ts', '.part', '.mpg', '.mpeg']
+    dirs, fullFiles = xbmcvfs.listdir(folder)
+    files = []
+    for fullFile in fullFiles:
+        filename, file_extension = os.path.splitext(fullFile)
+        xbmc.log("testing file : " + fullFile.encode("utf-8"), level=xbmc.LOGERROR)
+        xbmc.log("testing file extension : " + file_extension, level=xbmc.LOGERROR)
+        if (len(filter(lambda x: x == file_extension, acceptableExtensions)) > 0):
+            # if file_extension in acceptableExtensions:
+            files.append(fullFile)
+
+	# if not len(files)>0:
+	# 	raise Exception()
+    return files
+
+
+def selectPicture(showName):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:69.0) Gecko/20100101 Firefox/69.0',
+    }
+    requestUrl = "https://api.qwant.com/api/search/images?count=10&offset=0&q=" + showName + "&t=images&uiv=4"
+    # requestUrl = urllib.parse.quote("https://api.qwant.com/api/search/images?count=10&offset=0&q="+showName+"&t=images&uiv=4")
+    r = requests.get(requestUrl, headers=headers)
+    # xbmc.log("Images qwant result from " + requestUrl.encode('utf-8'), level=xbmc.LOGERROR)
+    xbmc.log(r.text.encode('utf-8'), level=xbmc.LOGERROR)
+    result = r.json()
+    images = result['data']['result']['items']
+
+    listItems = []
+    i = 0
+    for item in images:
+        name = item['title']
+        icon = item['media']
+        addonid = int(item['size']) / 1024
+        listitem = xbmcgui.ListItem(label=name, label2=str(addonid) + "Ko", iconImage=icon, thumbnailImage=icon)
+        listItems.append(listitem)
+        i += 1
+
+    xbmc.log("item length : " + str(len(listItems)), level=xbmc.LOGERROR)
+    num = xbmcgui.Dialog().select("Choose a picture", listItems, useDetails=True)
+    xbmc.log("selected picture : " + str(num), level=xbmc.LOGERROR)
+
+    return images[num]['media']
+
+
+def fixFileNames(files, showNumber, folder):
+    newFilesNAmes = []
+    if not re.search("S\d+", files[0], flags=re.I):
+        for file in files:
+            if re.search("(e[0-9]+)", file):
+                newFileName = re.sub("(e[0-9]+)", "S" + str(showNumber) + "\\1", file, flags=re.I)
+
+            else:
+                newFileName = re.sub("([0-9]+)", "S" + str(showNumber) + "E\\1", file, flags=re.I)
+
+            # xbmc.log("renaming : " + folder+"/"+file + 'To ' + folder+"/"+newFileName ,level=xbmc.LOGERROR)
+            xbmcvfs.rename(folder + "/" + file, folder + "/" + newFileName);
+            newFilesNAmes.append(newFileName)
+    else:
+        newFilesNAmes = files
+
+	for newFileName in newFilesNAmes:
+		if not re.search("S\d+", newFileName, flags=re.I):
+			raise Exception()
+
+    return newFilesNAmes;
+
+
+def GetKeyboardText(title="", defaultText=""):
+    keyboard = xbmc.Keyboard(defaultText, title)
+    keyboard.doModal()
+    text = "" if not keyboard.isConfirmed() else keyboard.getText()
+    return text
+
+def get_params():
+    param = []
+    paramstring = sys.argv[2]
+    if len(paramstring) >= 2:
+        params = sys.argv[2]
+        cleanedparams = params.replace('?', '')
+        if (params[len(params) - 1] == '/'):
+            params = params[0:len(params) - 2]
+        pairsofparams = cleanedparams.split('&')
+        param = {}
+        for i in range(len(pairsofparams)):
+            splitparams = {}
+            splitparams = pairsofparams[i].split('=')
+            if (len(splitparams)) == 2:
+                param[splitparams[0].lower()] = splitparams[1]
+    return param
+
+
+params = get_params()
+url = None
+logos = None
+name = None
+mode = None
+iconimage = None
+description = None
+folder = None
+files = []
+showName = None
+showNumber = None
+
+try:
+    url = urllib.unquote_plus(params["url"])
+except:
+    pass
+try:
+    logos = urllib.unquote_plus(params.get("logos", ''))
+except:
+    pass
+try:
+    name = urllib.unquote_plus(params["name"])
+except:
+    pass
+try:
+    iconimage = urllib.unquote_plus(params["iconimage"])
+except:
+    pass
+try:
+    mode = int(params["mode"])
+except:
+    pass
+try:
+    index = int(params["index"])
+except:
+    pass
+try:
+    move = int(params["move"])
+except:
+    pass
+
+
+def createTvShowNfo(showName, showNumber, picture, files, folder):
+
+    tvshow = ET.Element('tvshow')
+    ET.SubElement(tvshow, 'title').text = showName
+    ET.SubElement(tvshow, 'season').text = showNumber
+    ET.SubElement(tvshow, 'episode').text = str(len(files))
+    ET.SubElement(tvshow, 'thumb').text = picture
+    tree = ET.ElementTree(tvshow)
+    tree.write(folder + "/tvshow.nfo", encoding='utf-8', xml_declaration=True)
+
+
+def createFilesNfo(showName, showNumber, files):
+    for file in files:
+        regex = r"S\d+E(\d+)"
+        test_str = file
+        matches = re.finditer(regex, test_str, flags=re.I)
+        match = next(matches)
+        episodeNum = match.group(1);
+        xbmc.log("file " + file.encode('utf8'), level=xbmc.LOGERROR)
+        xbmc.log("episode number " + episodeNum.encode('utf8'), level=xbmc.LOGERROR)
+        # for matchNum, match in enumerate(matches, start=1):
+        #
+        # 	for groupNum in range(0, len(match.groups())):
+        # 		groupNum = groupNum + 1
+        # 		xbmc.log("Group {groupNum} found at {start}-{end}: {group}".format(groupNum = groupNum, start = match.start(groupNum), end = match.end(groupNum), group = match.group(groupNum)).encode('utf8'),level=xbmc.LOGERROR)
+
+        episode = ET.Element('episodedetails')
+        ET.SubElement(episode, 'title').text = episodeNum
+        ET.SubElement(episode, 'showtitle').text = showName
+        ET.SubElement(episode, 'season').text = showNumber
+        ET.SubElement(episode, 'episode').text = episodeNum
+        tree = ET.ElementTree(episode)
+        filename, file_extension = os.path.splitext(file)
+        xbmc.log(("writing nfo file " + folder + filename + ".nfo").encode('utf8'), level=xbmc.LOGERROR)
+        tree.write(folder + filename + ".nfo",encoding='utf-8', xml_declaration=True )
+
+def confirm():
+	dialog = xbmcgui.Dialog(showName, showNumber)
+	return dialog.yesno('Please confirm generation, existing nfo files will be overwritten',
+				   'TV show : '+showName,
+				   'Season : '+showNumber
+				   )
+
+def outro():
+	dialog = xbmcgui.Dialog()
+	ok = dialog.ok('The nfo files should have be created',
+			   'Now you can update your video library'
+			   )
+def error():
+	dialog = xbmcgui.Dialog()
+	ok = dialog.ok('Oops',
+				   'Something went wrong',
+				   'Please check your filenames'
+				   )
+
+
+if mode == None:
+	xbmc.log("start", level=xbmc.LOGERROR)
+	# 	Categories()
+	# elif mode == 20:
+	try:
+		intro()
+		folder = SelectFolder()
+		xbmc.log("folder selected " + folder.encode('utf8'), level=xbmc.LOGERROR)
+		files = ListFilesInFolder()
+		xbmc.log("files found " + (', '.join(files)).encode('utf8'), level=xbmc.LOGERROR)
+		showName = getShowName(folder)
+		xbmc.log("Show name " + showName.encode('utf8'), level=xbmc.LOGERROR)
+		showNumber = GetKeyboardText(getLocaleString(10003), "01")
+		xbmc.log("Show Number " + showNumber.encode('utf8'), level=xbmc.LOGERROR)
+		picture = selectPicture(showName)
+		xbmc.log("Picture selected" + picture.encode('utf8'), level=xbmc.LOGERROR)
+		files = fixFileNames(files, showNumber, folder)
+		xbmc.log("filenames fixed" + (', '.join(files)).encode('utf8'), level=xbmc.LOGERROR)
+		if confirm():
+			xbmc.log("confirmed creating files".encode('utf8'), level=xbmc.LOGERROR)
+			createTvShowNfo(showName, showNumber, picture, files, folder)
+			createFilesNfo(showName, showNumber, files)
+			outro()
+	except:
+		error()
+		raise
+
+	sys.exit()
+
+
+xbmcplugin.endOfDirectory(int(sys.argv[1]))

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../plugin.video.playlistLoader/playlist.iml" filepath="$PROJECT_DIR$/../plugin.video.playlistLoader/playlist.iml" />
+      <module fileurl="file://$PROJECT_DIR$/plugin.video.nfogen.iml" filepath="$PROJECT_DIR$/plugin.video.nfogen.iml" />
+    </modules>
+  </component>
+</project>
