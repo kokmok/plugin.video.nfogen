@@ -39,8 +39,8 @@ def ListFilesInFolder():
     files = []
     for fullFile in fullFiles:
         filename, file_extension = os.path.splitext(fullFile)
-        xbmc.log("testing file : " + fullFile.encode("utf-8"), level=xbmc.LOGDEBUG)
-        xbmc.log("testing file extension : " + file_extension, level=xbmc.LOGDEBUG)
+#        xbmc.log("testing file : " + fullFile.encode("utf-8"), level=xbmc.LOGDEBUG)
+#        xbmc.log("testing file extension : " + file_extension, level=xbmc.LOGDEBUG)
         if (len(filter(lambda x: x == file_extension, acceptableExtensions)) > 0):
             files.append(fullFile)
 
@@ -67,9 +67,9 @@ def selectPicture(showName):
         listItems.append(listitem)
         i += 1
 
-    xbmc.log("item length : " + str(len(listItems)), level=xbmc.LOGINFO)
+    log("item length : " + str(len(listItems)))
     num = xbmcgui.Dialog().select("Choose a picture", listItems, useDetails=True)
-    xbmc.log("selected picture : " + str(num), level=xbmc.LOGINFO)
+    log("selected picture : " + str(num))
 
     return images[num]['media']
 
@@ -84,8 +84,15 @@ def fixFileNames(files, showNumber, folder):
             else:
                 newFileName = re.sub("[._-]([0-9]+)", "S" + str(showNumber) + "E\\1", file, flags=re.I)
 
-            xbmcvfs.rename(folder + "/" + file, folder + "/" + newFileName);
-            newFilesNames.append(newFileName)
+            try:
+		xbmcvfs.rename(folder + "/" + file, folder + "/" + newFileName);
+		newFilesNames.append(newFileName)
+	    except UnicodeDecodeError:
+		#newFileName = newFileName.decode('utf8')
+		folder = folder.encode('utf8')
+		xbmcvfs.rename(folder + "/" + file, folder + "/" + newFileName);
+		newFilesNames.append(newFileName)
+		
     else:
         newFilesNames = files
 
@@ -139,8 +146,8 @@ def createFilesNfo(showName, showNumber, files):
         matches = re.finditer(regex, test_str, flags=re.I)
         match = next(matches)
         episodeNum = match.group(1);
-        xbmc.log("file " + file.encode('utf8'), level=xbmc.LOGDEBUG)
-        xbmc.log("episode number " + episodeNum.encode('utf8'), level=xbmc.LOGDEBUG)
+        log("file " + file)
+        log("episode number " + episodeNum)
 
         episode = ET.Element('episodedetails')
         ET.SubElement(episode, 'title').text = episodeNum
@@ -149,9 +156,11 @@ def createFilesNfo(showName, showNumber, files):
         ET.SubElement(episode, 'episode').text = episodeNum
         tree = ET.ElementTree(episode)
         filename, file_extension = os.path.splitext(file)
-        xbmc.log(("writing nfo file " + folder + filename + ".nfo").encode('utf8'), level=xbmc.LOGINFO)
-        tree.write(folder + filename + ".nfo",encoding='utf-8', xml_declaration=True )
-
+        #log(("writing nfo file " + folder + filename + ".nfo"))
+        try: 
+	    tree.write(folder + filename + ".nfo",encoding='utf-8', xml_declaration=True )
+	except UnicodeDecodeError:
+	    tree.write(folder.encode('utf8') + filename + ".nfo",encoding='utf-8', xml_declaration=True )
 def confirm():
 	dialog = xbmcgui.Dialog(showName, showNumber)
 	return dialog.yesno('Please confirm generation, existing nfo files will be overwritten',
@@ -179,23 +188,35 @@ showNumber = None
 
 
 
-xbmc.log("start nfogen", level=xbmc.LOGINFO)
+
+def log(txt): #Log admits both unicode strings and str encoded with "utf-8" (or ascii). will fail with other str encodings.
+    if isinstance (txt,str):
+        txt = txt.decode("utf-8") #if it is str we assume it's "utf-8" encoded.
+                                  #will fail if called with other encodings (latin, etc) BE ADVISED!
+# At this point we are sure txt is a unicode string.
+    message = u'%s: %s' % ('plugin.video.nfogen', txt)
+    xbmc.log(msg=message.encode("utf-8"), level=xbmc.LOGDEBUG)
+    # I reencode to utf-8 because in many xbmc versions log doesn't admit unicode. 
+
+
+
+log("start nfogen")
 try:
     intro()
     folder = SelectFolder()
-    xbmc.log("folder selected " + folder.encode('utf8'), level=xbmc.LOGINFO)
+    log("folder selected ")
     files = ListFilesInFolder()
-    xbmc.log("files found " + (', '.join(files)).encode('utf8'), level=xbmc.LOGINFO)
+    log("files found " + (', '.join(files)))
     showName = getShowName(folder)
-    xbmc.log("Show name " + showName.encode('utf8'), level=xbmc.LOGINFO)
+    log("Show name " + showName)
     showNumber = GetKeyboardText(getLocaleString(10003), "01")
-    xbmc.log("Show Number " + showNumber.encode('utf8'), level=xbmc.LOGINFO)
+    log("Show Number " + showNumber)
     picture = selectPicture(showName)
-    xbmc.log("Picture selected" + picture.encode('utf8'), level=xbmc.LOGINFO)
+    log("Picture selected" + picture)
     files = fixFileNames(files, showNumber, folder)
-    xbmc.log("filenames fixed" + (', '.join(files)).encode('utf8'), level=xbmc.LOGINFO)
+    log("filenames fixed" + (', '.join(files)))
     if confirm():
-        xbmc.log("confirmed creating files".encode('utf8'), level=xbmc.LOGINFO)
+        log("confirmed creating files")
         createTvShowNfo(showName, showNumber, picture, files, folder)
         createFilesNfo(showName, showNumber, files)
         outro()
