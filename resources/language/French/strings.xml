@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<strings>
+	<string id="10001">Choisissez le dossier source</string>
+	<string id="10002">Entrez le nom complet de la série</string>
+	<string id="10003">Entrez le numéro de saison ( 2 chiffres obligatoires)</string>
+	<string id="10004">Comment être sur que Kodi va trouver la série ?</string>
+	<string id="10005">Mettez le dossier de la saison dans le dossier racine (source) des séries ex : /medias/series/dinotrux Season 1</string>
+	<string id="10006">ne marchera pas : /medias/series/dinotrux/dinotrux Season 1</string>
+	<string id="10007">Vérifiez que vos fichiers soient bien nommés, le huméro de l'épisode doit être visible (ex dinotruxE02.mp4)</string>
+	<string id="10008">Choisissez le dossier source</string>
+	<string id="10009">Confirmez la génération de fichiers nfo</string>
+	<string id="10010">Série : </string>
+	<string id="10011">Saison : </string>
+	<string id="10012">Les fichiers nfo devraient avoir été générés</string>
+	<string id="10013">Vous pouvez mettre à jour la médiathèque</string>
+	<string id="10014">Oups</string>
+	<string id="10015">Il y a eu un problème</string>
+	<string id="10016">Vérifiez le nom de vos fichiers</string>
+</strings>
