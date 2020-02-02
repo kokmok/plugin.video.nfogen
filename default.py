@@ -50,11 +50,11 @@ def ListFilesInFolder():
     files = []
     for fullFile in fullFiles:
         filename, file_extension = os.path.splitext(fullFile)
-        xbmc.log("NFOGEN: testing file : " + fullFile.encode("utf-8"), level=xbmc.LOGDEBUG)
-        xbmc.log("NFOGEN: testing file extension : " + file_extension, level=xbmc.LOGDEBUG)
+        xbmc.log("testing file : " + fullFile.encode("utf-8"), level=xbmc.LOGDEBUG)
+        xbmc.log("testing file extension : " + file_extension, level=xbmc.LOGDEBUG)
         if (len(filter(lambda x: x == file_extension, acceptableExtensions)) > 0):
             files.append(fullFile)
-    
+
     return files
 
 
@@ -67,7 +67,7 @@ def selectPicture(showName):
     xbmc.log(r.text.encode('utf-8'), level=xbmc.LOGINFO)
     result = r.json()
     images = result['data']['result']['items']
-    
+
     listItems = []
     i = 0
     for item in images:
@@ -77,11 +77,11 @@ def selectPicture(showName):
         listitem = xbmcgui.ListItem(label=name, label2=str(addonid) + "Ko", iconImage=icon, thumbnailImage=icon)
         listItems.append(listitem)
         i += 1
-    
-    xbmc.log("NFOGEN: item length : " + str(len(listItems)), level=xbmc.LOGINFO)
+
+    xbmc.log("item length : " + str(len(listItems)), level=xbmc.LOGINFO)
     num = xbmcgui.Dialog().select("Choose a picture", listItems, useDetails=True)
-    xbmc.log("NFOGEN: selected picture : " + str(num), level=xbmc.LOGINFO)
-    
+    xbmc.log("selected picture : " + str(num), level=xbmc.LOGINFO)
+
     return images[num]['media']
 
 
@@ -91,12 +91,20 @@ def fixFileNames(files, showNumber, folder):
         for file in files:
             if re.search("(e[0-9]+)", file, flags=re.I):
                 newFileName = re.sub("(e[0-9]+)", "S" + str(showNumber) + "\\1", file, flags=re.I)
-            
+
             else:
                 newFileName = re.sub("[._-]([0-9]+)", "S" + str(showNumber) + "E\\1", file, flags=re.I)
-            
-            xbmcvfs.rename(folder + "/" + file, folder + "/" + newFileName)
-            newFilesNames.append(newFileName)
+
+            try:
+                xbmcvfs.rename(folder + "/" + file, folder + "/" + newFileName);
+                newFilesNames.append(newFileName)
+            except UnicodeDecodeError:
+                #newFileName = newFileName.decode('utf8')
+        
+        folder = folder.encode('utf8')
+        xbmcvfs.rename(folder + "/" + file, folder + "/" + newFileName);
+        newFilesNames.append(newFileName)
+        
     else:
         newFilesNames = files
         
@@ -199,22 +207,37 @@ showName = None
 showNumber = None
 
 xbmc.log("NFOGEN: start nfogen", level=xbmc.LOGINFO)
+
+
+
+def log(txt): #Log admits both unicode strings and str encoded with "utf-8" (or ascii). will fail with other str encodings.
+    if isinstance (txt,str):
+        txt = txt.decode("utf-8") #if it is str we assume it's "utf-8" encoded.
+                                  #will fail if called with other encodings (latin, etc) BE ADVISED!
+# At this point we are sure txt is a unicode string.
+    message = u'%s: %s' % ('plugin.video.nfogen', txt)
+    xbmc.log(msg=message.encode("utf-8"), level=xbmc.LOGDEBUG)
+    # I reencode to utf-8 because in many xbmc versions log doesn't admit unicode.
+
+
+
+log("start nfogen")
 try:
     intro()
     folder = SelectFolder()
-    xbmc.log("NFOGEN: folder selected " + folder.encode('utf8'), level=xbmc.LOGINFO)
+    xbmc.log("folder selected " + folder.encode('utf8'), level=xbmc.LOGINFO)
     files = ListFilesInFolder()
-    xbmc.log("NFOGEN: files found " + (', '.join(files)).encode('utf8'), level=xbmc.LOGINFO)
+    xbmc.log("files found " + (', '.join(files)).encode('utf8'), level=xbmc.LOGINFO)
     showName = getShowName(folder)
-    xbmc.log("NFOGEN: Show name " + showName.encode('utf8'), level=xbmc.LOGINFO)
+    xbmc.log("Show name " + showName.encode('utf8'), level=xbmc.LOGINFO)
     showNumber = GetKeyboardText(getLocaleString(10003), "01")
-    xbmc.log("NFOGEN: Show Number " + showNumber.encode('utf8'), level=xbmc.LOGINFO)
+    xbmc.log("Show Number " + showNumber.encode('utf8'), level=xbmc.LOGINFO)
     picture = selectPicture(showName)
-    xbmc.log("NFOGEN: Picture selected" + picture.encode('utf8'), level=xbmc.LOGINFO)
+    xbmc.log("Picture selected" + picture.encode('utf8'), level=xbmc.LOGINFO)
     files = fixFileNames(files, showNumber, folder)
-    xbmc.log("NFOGEN: filenames fixed" + (', '.join(files)).encode('utf8'), level=xbmc.LOGINFO)
+    xbmc.log("filenames fixed" + (', '.join(files)).encode('utf8'), level=xbmc.LOGINFO)
     if confirm():
-        xbmc.log("NFOGEN: confirmed creating files".encode('utf8'), level=xbmc.LOGINFO)
+        xbmc.log("confirmed creating files".encode('utf8'), level=xbmc.LOGINFO)
         createTvShowNfo(showName, showNumber, picture, files, folder)
         createFilesNfo(showName, showNumber, files)
         outro()

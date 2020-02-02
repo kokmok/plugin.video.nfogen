@@ -2,17 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="48c21851-0d76-4f06-80cc-be77c88c8772" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/language/English/strings.po" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/language/French/strings.po" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/language/French/strings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/language/resource.language.en_gb/strings.po" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/resources/language/resource.language.fr_fr/strings.po" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/addon.xml" beforeDir="false" afterPath="$PROJECT_DIR$/addon.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/default.py" beforeDir="false" afterPath="$PROJECT_DIR$/default.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/resources/language/English/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/resources/language/English/strings.xml" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -161,7 +153,7 @@
       <workItem from="1569274923342" duration="9888000" />
       <workItem from="1580632585826" duration="2336000" />
       <workItem from="1580635346147" duration="1014000" />
-      <workItem from="1580636492683" duration="4578000" />
+      <workItem from="1580636492683" duration="4877000" />
     </task>
     <servers />
   </component>
