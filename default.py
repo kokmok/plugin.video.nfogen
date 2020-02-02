@@ -2,7 +2,8 @@
 import urllib, sys, xbmcplugin, xbmcvfs, xbmcgui, xbmcaddon, xbmc, os, json, glob, requests, re, \
 	 os
 
-from xml.etree import ElementTree as ET
+# from xml.etree import ElementTree as ET
+import xml.etree.ElementTree as ET
 
 AddonID = 'plugin.video.nfogen'
 Addon = xbmcaddon.Addon(AddonID)
@@ -145,7 +146,7 @@ def get_params():
 def createTvShowNfo(showName, showNumber, picture, files, folder):
 	xbmc.log("NFOGEN: tvshow " + str(len(files)).encode('utf8'), level=xbmc.LOGDEBUG)
 	tvshow = ET.Element('tvshow')
-	xbmc.log("NFOGEN: writing tvshow nfo to " + folder + "/tvshow.nfo".encode('utf8'), level=xbmc.LOGDEBUG)
+	xbmc.log("NFOGEN: writing tvshow nfo to " + folder.encode('utf8') + "/tvshow.nfo".encode('utf8'), level=xbmc.LOGDEBUG)
 	ET.SubElement(tvshow, 'title').text = showName
 	ET.SubElement(tvshow, 'season').text = showNumber
 	ET.SubElement(tvshow, 'episode').text = str(len(files))
