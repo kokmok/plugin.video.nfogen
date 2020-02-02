@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import urllib, sys, xbmcplugin, xbmcvfs, xbmcgui, xbmcaddon, xbmc, os, json, glob, requests, re, \
-	xml.etree.cElementTree as ET, os
+	 os
+
+from xml.etree import ElementTree as ET
 
 AddonID = 'plugin.video.nfogen'
 Addon = xbmcaddon.Addon(AddonID)

@@ -5,7 +5,7 @@
 <!--	<import addon="repository.xbmc-israel" />-->
     <import addon="script.module.web-pdb" />
     <import addon="script.module.requests" />
-      <import addon="script.module.elementtree" version="1.2.7"/>
+<!--      <import addon="script.module.elementtree" version="1.2.7"/>-->
   </requires>
   <extension point="xbmc.python.pluginsource" library="default.py">
         <provides>video</provides>
