@@ -148,8 +148,7 @@ def createTvShowNfo(showName, showNumber, picture, files, folder):
 	seasonXML += "\n\t<episode>"+str(len(files))+"</episode>"
 	seasonXML += "\n\t<thumb>"+picture+"</episode>"
 	seasonXML += "\n</tvshow>"
-	filename, file_extension = os.path.splitext(file)
-	xbmc.log(("writing nfo file " + folder + filename + ".nfo").encode('utf8'), level=xbmc.LOGINFO)
+	xbmc.log(("writing nfo file " + folder + "tvshow.nfo").encode('utf8'), level=xbmc.LOGINFO)
 	text_file = open(folder + "tvshow" + ".nfo", "w+")
 	text_file.write(episodeXML)
 	text_file.close()
