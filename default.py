@@ -2,9 +2,6 @@
 import urllib, sys, xbmcplugin, xbmcvfs, xbmcgui, xbmcaddon, xbmc, os, json, glob, requests, re, \
 	 os
 
-# from xml.etree import ElementTree as ET
-import xml.etree.ElementTree as ET
-
 AddonID = 'plugin.video.nfogen'
 Addon = xbmcaddon.Addon(AddonID)
 AddonName = Addon.getAddonInfo("name")
@@ -41,9 +38,9 @@ def getShowName(folder):
 		showName = folder
 	else:
 		showName = search.group(1).replace(".", " ").replace("_", " ")
-	
+
 	xbmc.log("NFOGEN: showName found : " + showName.encode("utf-8"), level=xbmc.LOGDEBUG)
-	
+
 	return GetKeyboardText(getLocaleString(10002), showName)
 
 
@@ -57,7 +54,7 @@ def ListFilesInFolder():
 		xbmc.log("testing file extension : " + file_extension, level=xbmc.LOGDEBUG)
 		if (len(filter(lambda x: x == file_extension, acceptableExtensions)) > 0):
 			files.append(fullFile)
-	
+
 	return files
 
 
@@ -70,7 +67,7 @@ def selectPicture(showName):
 	xbmc.log(r.text.encode('utf-8'), level=xbmc.LOGINFO)
 	result = r.json()
 	images = result['data']['result']['items']
-	
+
 	listItems = []
 	i = 0
 	for item in images:
@@ -80,11 +77,11 @@ def selectPicture(showName):
 		listitem = xbmcgui.ListItem(label=name, label2=str(addonid) + "Ko", iconImage=icon, thumbnailImage=icon)
 		listItems.append(listitem)
 		i += 1
-	
+
 	xbmc.log("item length : " + str(len(listItems)), level=xbmc.LOGINFO)
 	num = xbmcgui.Dialog().select("Choose a picture", listItems, useDetails=True)
 	xbmc.log("selected picture : " + str(num), level=xbmc.LOGINFO)
-	
+
 	return images[num]['media']
 
 
@@ -94,27 +91,27 @@ def fixFileNames(files, showNumber, folder):
 		for file in files:
 			if re.search("(e[0-9]+)", file, flags=re.I):
 				newFileName = re.sub("(e[0-9]+)", "S" + str(showNumber) + "\\1", file, flags=re.I)
-			
+
 			else:
 				newFileName = re.sub("[._-]([0-9]+)", "S" + str(showNumber) + "E\\1", file, flags=re.I)
-			
+
 			try:
 				xbmcvfs.rename(folder2 + "/" + file, folder2 + "/" + newFileName);
 				newFilesNames.append(newFileName)
 			except UnicodeDecodeError:
 				xbmc.log("unicode decode error : " + file.encode('utf8'), level=xbmc.LOGINFO)
-		
+
 		folder2 = folder.encode('utf8')
 		xbmcvfs.rename(folder2 + "/" + file, folder2 + "/" + newFileName);
 		newFilesNames.append(newFileName)
-	
+
 	else:
 		newFilesNames = files
-		
+
 		for newFileName in newFilesNames:
 			if not re.search("[._-]S\d+", newFileName, flags=re.I):
 				raise Exception()
-	
+
 	return newFilesNames
 
 
@@ -145,14 +142,17 @@ def get_params():
 
 def createTvShowNfo(showName, showNumber, picture, files, folder):
 	xbmc.log("NFOGEN: tvshow " + str(len(files)).encode('utf8'), level=xbmc.LOGDEBUG)
-	tvshow = ET.Element('tvshow')
-	xbmc.log("NFOGEN: writing tvshow nfo to " + folder.encode('utf8') + "/tvshow.nfo".encode('utf8'), level=xbmc.LOGDEBUG)
-	ET.SubElement(tvshow, 'title').text = showName
-	ET.SubElement(tvshow, 'season').text = showNumber
-	ET.SubElement(tvshow, 'episode').text = str(len(files))
-	ET.SubElement(tvshow, 'thumb').text = picture
-	tree = ET.ElementTree(tvshow)
-	tree.write(folder + "/tvshow.nfo", encoding='utf-8', xml_declaration=True)
+	seasonXML = "<?xml version="1.0" encoding="utf-8"?>\n<tvshow>"
+	seasonXML += "\n\t<title>"+showName+"</title>"
+	seasonXML += "\n\t<season>"+showNumber+"</season>"
+	seasonXML += "\n\t<episode>"+str(len(files))+"</episode>"
+	seasonXML += "\n\t<thumb>"+picture+"</episode>"
+	seasonXML += "\n</tvshow>"
+	filename, file_extension = os.path.splitext(file)
+	xbmc.log(("writing nfo file " + folder + filename + ".nfo").encode('utf8'), level=xbmc.LOGINFO)
+	text_file = open(folder + "tvshow" + ".nfo", "w+")
+	text_file.write(episodeXML)
+	text_file.close()
 
 
 def createFilesNfo(showName, showNumber, files):
@@ -162,21 +162,21 @@ def createFilesNfo(showName, showNumber, files):
 		test_str = file
 		xbmc.log("NFOGEN: file " + test_str.encode('utf8'), level=xbmc.LOGDEBUG)
 		search = re.search("S\d+E(\d+)", test_str, flags=re.I)
-		
+
 		episodeNum = search.group(1);
 		xbmc.log("NFOGEN: file " + file.encode('utf8'), level=xbmc.LOGDEBUG)
 		xbmc.log("NFOGEN: episode number " + episodeNum.encode('utf8'), level=xbmc.LOGDEBUG)
-		
-		episode = ET.Element('episodedetails')
-		ET.SubElement(episode, 'title').text = episodeNum
-		ET.SubElement(episode, 'showtitle').text = showName
-		ET.SubElement(episode, 'season').text = showNumber
-		ET.SubElement(episode, 'episode').text = episodeNum
-		tree = ET.ElementTree(episode)
+		episodeXML = "<?xml version="1.0" encoding="utf-8"?>\n<episodedetails>"
+		episodeXML += "\n\t<title>"+episodeNum+"</title>"
+		episodeXML += "\n\t<showtitle>"+showName+"</showtitle>"
+		episodeXML += "\n\t<season>"+showNumber+"</season>"
+		episodeXML += "\n\t<episode>"+episodeNum+"</episode>"
+		episodeXML += "\n</episodedetails>"
 		filename, file_extension = os.path.splitext(file)
 		xbmc.log(("writing nfo file " + folder + filename + ".nfo").encode('utf8'), level=xbmc.LOGINFO)
-		tree.write(folder + filename + ".nfo", encoding='utf-8', xml_declaration=True)
-
+		text_file = open(folder + filename + ".nfo", "w+")
+		text_file.write(episodeXML)
+		text_file.close()
 
 def confirm():
 	dialog = xbmcgui.Dialog(showName, showNumber)
