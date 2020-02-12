@@ -142,7 +142,7 @@ def get_params():
 
 def createTvShowNfo(showName, showNumber, picture, files, folder):
 	xbmc.log("NFOGEN: tvshow " + str(len(files)).encode('utf8'), level=xbmc.LOGDEBUG)
-	seasonXML = "<?xml version="1.0" encoding="utf-8"?>\n<tvshow>"
+	seasonXML = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<tvshow>"
 	seasonXML += "\n\t<title>"+showName+"</title>"
 	seasonXML += "\n\t<season>"+showNumber+"</season>"
 	seasonXML += "\n\t<episode>"+str(len(files))+"</episode>"
@@ -166,7 +166,7 @@ def createFilesNfo(showName, showNumber, files):
 		episodeNum = search.group(1);
 		xbmc.log("NFOGEN: file " + file.encode('utf8'), level=xbmc.LOGDEBUG)
 		xbmc.log("NFOGEN: episode number " + episodeNum.encode('utf8'), level=xbmc.LOGDEBUG)
-		episodeXML = "<?xml version="1.0" encoding="utf-8"?>\n<episodedetails>"
+		episodeXML = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<episodedetails>"
 		episodeXML += "\n\t<title>"+episodeNum+"</title>"
 		episodeXML += "\n\t<showtitle>"+showName+"</showtitle>"
 		episodeXML += "\n\t<season>"+showNumber+"</season>"
