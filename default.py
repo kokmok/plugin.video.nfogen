@@ -150,7 +150,7 @@ def createTvShowNfo(showName, showNumber, picture, files, folder):
 	seasonXML += "\n</tvshow>"
 	xbmc.log(("writing nfo file " + folder + "tvshow.nfo").encode('utf8'), level=xbmc.LOGINFO)
 	text_file = xbmcvfs.File(folder + "tvshow" + ".nfo", "w+")
-	text_file.write(seasonXML)
+	text_file.write(seasonXML.encode('utf8'))
 	text_file.close()
 
 
@@ -174,7 +174,7 @@ def createFilesNfo(showName, showNumber, files):
 		filename, file_extension = os.path.splitext(file)
 		xbmc.log(("writing nfo file " + folder + filename + ".nfo").encode('utf8'), level=xbmc.LOGINFO)
 		text_file = xbmcvfs.File(folder + filename + ".nfo", "w+")
-		text_file.write(episodeXML)
+		text_file.write(episodeXML.encode('utf8'))
 		text_file.close()
 
 def confirm():
