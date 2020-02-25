@@ -88,20 +88,20 @@ def selectPicture(showName):
 def fixFileNames(files, showNumber, folder):
 	newFilesNames = []
 	if not re.search("[._-]S\d+", files[0], flags=re.I):
+		folder2 = folder.encode('utf8')
 		for file in files:
 			if re.search("(e[0-9]+)", file, flags=re.I):
 				newFileName = re.sub("(e[0-9]+)", "S" + str(showNumber) + "\\1", file, flags=re.I)
-
+			
 			else:
 				newFileName = re.sub("[._-]([0-9]+)", "S" + str(showNumber) + "E\\1", file, flags=re.I)
-
+			
 			try:
 				xbmcvfs.rename(folder2 + "/" + file, folder2 + "/" + newFileName);
 				newFilesNames.append(newFileName)
 			except UnicodeDecodeError:
 				xbmc.log("unicode decode error : " + file.encode('utf8'), level=xbmc.LOGINFO)
-
-		folder2 = folder.encode('utf8')
+		
 		xbmcvfs.rename(folder2 + "/" + file, folder2 + "/" + newFileName);
 		newFilesNames.append(newFileName)
 
